@@ -1,11 +1,11 @@
 {
   "name": "Fap Instructor Personal",
   "short_name": "FI Personal",
-  "description": "Personal-use Docker app for scripts, generators, player, metronome, media, devices, and challenger rooms.",
+  "description": "Personal-use Docker app for images, videos, scripts, player, and metronome.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#100d12",
-  "theme_color": "#ff4fa3",
+  "background_color": "#242424",
+  "theme_color": "#252525",
   "icons": [
     { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png" }

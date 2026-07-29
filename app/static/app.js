@@ -142,7 +142,104 @@ function mediaEmbed(url, type) { const u = escapeHtml(url); if (!url) return '<s
 function pageMetronome() { shell('Metronome', 'Simple standalone BPM clicker', `<section class="panel card"><div class="grid two"><div><div class="field"><label>BPM</label><input id="metro-bpm" type="number" value="80" min="20" max="240"></div><div class="row"><button class="btn primary" id="metro-start">Start</button><button class="btn" id="metro-stop">Stop</button></div></div><div class="event-display center"><div class="beat-dot" id="standalone-beat" style="margin:2rem auto;width:80px;height:80px"></div><div class="countdown" id="metro-label">80</div><p class="muted">BPM</p></div></div></section>`); state.metronome = createStandaloneMetronome(); }
 function createStandaloneMetronome() { let timer = null, audioCtx = null; const dot = $('#standalone-beat'); function pulse() { dot.classList.add('on'); setTimeout(() => dot.classList.remove('on'), 90); try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.value = 880; gain.gain.value = 0.045; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.04); } catch {} } function start() { stop(); const bpm = Math.max(20, Math.min(240, Number($('#metro-bpm').value || 80))); $('#metro-label').textContent = bpm; pulse(); timer = setInterval(pulse, 60000 / bpm); } function stop() { if (timer) clearInterval(timer); timer = null; dot?.classList.remove('on'); } $('#metro-start').addEventListener('click', start); $('#metro-stop').addEventListener('click', stop); $('#metro-bpm').addEventListener('input', e => $('#metro-label').textContent = e.target.value || '80'); return { destroy: stop }; }
 
-async function pageGenerators() { const gens = await api('/api/game-generators'); shell('Generator', 'Generate a timed metronome game', `<div class="grid auto">${gens.items.map(g => `<article class="card"><div class="row between"><h3>${escapeHtml(g.name)}</h3><span class="badge">runs ${g.runs || 0}</span></div><p class="muted small">${escapeHtml(g.description || '')}</p>${tagsHtml(g.tags)}<button class="btn primary start-gen" data-id="${g.id}" style="margin-top:.8rem">Start generator</button></article>`).join('') || '<div class="card">No generator seeded.</div>'}</div>`); $$('.start-gen').forEach(b => b.addEventListener('click', async () => { try { const d = await api(`/api/game-generators/${b.dataset.id}/start`, { body: {} }); notify('Game generated'); nav(`game/${d.item.id}`); } catch (e) { notify(e.message, 'error'); } })); }
+async function pageGenerators() {
+  const [gens, media] = await Promise.all([api('/api/game-generators'), api('/api/media')]);
+  const first = gens.items[0];
+  const mediaOptions = media.items.map(m => `<option value="${escapeHtml(m.url)}">${escapeHtml(m.title)} (${escapeHtml(m.mediaType)})</option>`).join('');
+  const toggle = (id, label, on = true, disabled = false) => `<div class="toggle-row"><button type="button" id="${id}" class="switch ${on ? 'on' : ''} ${disabled ? 'disabled' : ''}" ${disabled ? 'disabled' : ''} aria-label="${escapeHtml(label)}"></button><span>${escapeHtml(label)}</span></div>`;
+
+  shell('Generator', 'Original-style settings layout for media and metronome sessions', `
+    <div class="mode-row">
+      <span class="mode-label">Settings Mode:</span>
+      <div class="segment" id="mode-segment">
+        <button class="active" data-mode="minimal">Minimal</button>
+        <button data-mode="advanced">Advanced</button>
+        <button data-mode="expert">Expert</button>
+      </div>
+      <span class="help-dot">?</span>
+    </div>
+
+    <section class="settings-card featured">
+      <h2><span class="crown">♕</span>Media</h2>
+      <p>Controls what images or videos you'll see during the game.</p>
+      <div class="field"><label>Media Tags</label><div class="select-like"><span>🏷️</span><span class="pill">local</span><input id="media-tags" placeholder="Search for a tag" style="border:0;background:transparent;padding:.2rem;box-shadow:none"><span class="chevrons">⌄</span></div></div>
+      <div class="field"><label>Media Format</label><select id="media-format"><option value="video">Videos</option><option value="image">Images</option><option value="both">Images & Videos</option></select></div>
+      <div class="field"><label>Optional media cue</label><select id="media-url"><option value="">No specific media selected</option>${mediaOptions}</select></div>
+    </section>
+
+    <section class="settings-card featured">
+      <h2><span class="crown">♕</span>Game Duration</h2>
+      <p>Controls how long a generated game will take to complete.</p>
+      <div class="field"><label>Minimum Duration (minutes)</label><input id="min-duration" type="number" min="1" max="180" value="3"></div>
+      <div class="field"><label>Maximum Duration (minutes)</label><input id="max-duration" type="number" min="1" max="180" value="5"></div>
+    </section>
+
+    <section class="settings-card">
+      <h2>Pacing</h2>
+      <p>Controls the available metronome and timing options.</p>
+      ${toggle('use-warmup', 'Warmup', true)}
+      ${toggle('use-stroking', 'Timed tempo segments', true)}
+      ${toggle('use-media', 'Media cues', media.items.length > 0)}
+      <div class="sub-card">
+        <h3>Tempo</h3>
+        <p>These are the available options related to metronome pacing.</p>
+        <div class="grid two"><div class="field"><label>Minimum BPM</label><input id="min-tempo" type="number" min="20" max="240" value="45"></div><div class="field"><label>Maximum BPM</label><input id="max-tempo" type="number" min="20" max="240" value="120"></div></div>
+        ${toggle('tempo-change', 'Tempo Changes', true)}
+        ${toggle('beat-patterns', 'Beat Patterns', true)}
+        ${toggle('random-beat', 'Random Beat', true)}
+        ${toggle('red-green', 'Red Light, Green Light', false)}
+      </div>
+    </section>
+
+    <section class="settings-card featured">
+      <h2><span class="crown">♕</span>Check-ins</h2>
+      <p>Optional prompts that appear during the session.</p>
+      ${toggle('include-instructions', 'Interactive check-ins', true)}
+      <div class="sub-card">
+        <h3>Intensity</h3>
+        <div class="range-line"><div><strong>Intensity</strong><p class="muted">Lower values create shorter tempo segments.</p></div><input id="intensity" type="range" min="1" max="3" value="2"></div>
+      </div>
+    </section>
+
+    <section class="settings-card featured">
+      <h2><span class="crown">♕</span>Game Information</h2>
+      <p>Give your generated game a title and description.</p>
+      <div class="field"><label>Title</label><input id="game-title" value="Game Generator 1"></div>
+      <div class="field"><label>Description</label><textarea id="game-description">Created on ${new Date().toLocaleDateString()}</textarea></div>
+    </section>
+
+    <button class="btn primary" id="generate-game" style="font-size:1.2rem;padding:1rem 1.6rem;margin:1rem 0 2rem">Generate</button>
+  `);
+
+  $$('#mode-segment button').forEach(button => button.addEventListener('click', () => {
+    $$('#mode-segment button').forEach(b => b.classList.remove('active'));
+    button.classList.add('active');
+    notify(`${button.textContent} mode selected`);
+  }));
+  $$('.switch:not(.disabled)').forEach(sw => sw.addEventListener('click', () => sw.classList.toggle('on')));
+  $('#generate-game').addEventListener('click', async () => {
+    if (!first) return notify('No generator found', 'error');
+    const minDuration = Math.max(1, Number($('#min-duration').value || 3));
+    const maxDuration = Math.max(minDuration, Number($('#max-duration').value || minDuration));
+    const intensityValue = Number($('#intensity').value || 2);
+    const config = {
+      durationMinutes: Math.round((minDuration + maxDuration) / 2),
+      minTempo: Number($('#min-tempo').value || 45),
+      maxTempo: Number($('#max-tempo').value || 120),
+      intensity: intensityValue <= 1 ? 'low' : intensityValue >= 3 ? 'high' : 'medium',
+      includeInstructions: $('#include-instructions').classList.contains('on'),
+      includeMedia: $('#use-media').classList.contains('on'),
+      mediaUrl: $('#media-url').value,
+      mediaFormat: $('#media-format').value,
+    };
+    try {
+      const d = await api(`/api/game-generators/${first.id}/start`, { body: { title: $('#game-title').value || 'Generated game', config } });
+      notify('Game generated');
+      nav(`game/${d.item.id}`);
+    } catch (e) { notify(e.message, 'error'); }
+  });
+}
+
 async function pageGames() { const games = await api('/api/games'); shell('Games', 'Generated sessions', `<div class="grid auto">${games.items.map(g => `<article class="card"><div class="row between"><h3>${escapeHtml(g.title)}</h3><span class="badge">${fmtSeconds(g.durationSeconds)}</span></div><p class="muted small">${escapeHtml(g.description || '')}</p>${tagsHtml(g.tags)}<a class="btn primary small-btn" href="#game/${g.id}" style="margin-top:.8rem">Play</a></article>`).join('') || '<div class="card">No generated games yet.</div>'}</div>`); }
 async function pageGame(id) { const { item } = await api(`/api/games/${id}`); shell(item.title, 'Generated game', `<div class="card"><div class="row between">${tagsHtml(item.tags)}<span class="badge">${fmtSeconds(item.durationSeconds)}</span></div></div><div id="player-mount" style="margin-top:1rem"></div>`); state.player = createPlayer($('#player-mount'), item, 'game'); }
 function pageAbout() { shell('About', 'Simple core build', `<section class="panel card"><h2>What this includes</h2><ul><li>Add/upload images and videos</li><li>Build scripts with media cues</li><li>Play scripts with timers and metronome</li><li>Standalone metronome</li><li>Generated timed games</li></ul><h2>What was removed</h2><ul><li>Login/admin</li><li>Age gate</li><li>Payments/subscriptions</li><li>Toy/device integrations</li><li>Challenger/WebSockets</li></ul></section>`); }

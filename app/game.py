@@ -15,52 +15,24 @@ SAFE_EVENT_TYPES = {
     "metronome-wait",
     "stroke",
     "stroke-tempo",
-    "stroke-tempo-percent",
     "stroke-grip",
     "stroke-style",
-    "stroke-hand",
-    "stroke-clench",
-    "stroke-double-speed",
-    "stroke-acceleration",
-    "stroke-red-light-green-light",
-    "cluster-strokes",
-    "teasing-strokes",
-    "edge",
-    "orgasm",
-    "ruined-orgasm",
-    "premature-ruin",
-    "eyes",
-    "audio",
     "media",
-    "status-effect",
-    "interact",
-    "reset",
-    "thread",
     "game-over",
-    # Adult optional categories present in the source site. These are user-authored only here.
-    "anal",
-    "cbt",
-    "nipples",
-    "mouth",
-    "lungs",
-    "moan",
-    "cei",
 }
 
 EVENT_CATALOG = [
-    {"type": "chat-message", "label": "Instructor message", "defaults": {"text": "Stay aware of your limits.", "speech": "Stay aware of your limits.", "duration": 4}},
-    {"type": "instruction", "label": "Interactive instruction", "defaults": {"title": "Consent check", "description": "Pause or stop at any time.", "duration": 8, "options": [{"title": "Continue", "events": []}, {"title": "Slow down", "events": [{"type": "stroke-tempo", "tempo": 50}]}]}},
+    {"type": "chat-message", "label": "Message", "defaults": {"text": "Follow the timer.", "speech": "Follow the timer.", "duration": 4}},
+    {"type": "instruction", "label": "Choice / check-in", "defaults": {"title": "Check in", "description": "Pause, slow down, or continue.", "duration": 8, "options": [{"title": "Continue", "events": []}, {"title": "Slow down", "events": [{"type": "stroke-tempo", "tempo": 50}]}]}},
     {"type": "wait", "label": "Wait / rest", "defaults": {"duration": 10}},
     {"type": "metronome", "label": "Set metronome", "defaults": {"tempo": 70, "measure": "4/4"}},
-    {"type": "stroke", "label": "Timed tempo segment", "defaults": {"tempo": 70, "duration": 20, "grip": "normal", "style": "full", "hand": "dominant"}},
+    {"type": "metronome-wait", "label": "Count beats", "defaults": {"count": 16}},
+    {"type": "stroke", "label": "Timed tempo segment", "defaults": {"tempo": 70, "duration": 20, "grip": "normal", "style": "full"}},
     {"type": "stroke-tempo", "label": "Change tempo", "defaults": {"tempo": 90}},
     {"type": "stroke-grip", "label": "Change grip", "defaults": {"grip": "normal"}},
     {"type": "stroke-style", "label": "Change style", "defaults": {"style": "full"}},
-    {"type": "metronome-wait", "label": "Count beats", "defaults": {"count": 16}},
-    {"type": "edge", "label": "Edge marker", "defaults": {"duration": 15, "cooldown": 10}},
-    {"type": "orgasm", "label": "Orgasm outcome", "defaults": {"orgasm": {"type": "deny", "edgeDuration": 15, "edgeCountdown": 5}}},
-    {"type": "media", "label": "Remote media cue", "defaults": {"url": "", "mediaType": "video", "duration": 20}},
-    {"type": "game-over", "label": "Game over", "defaults": {"message": "Complete"}},
+    {"type": "media", "label": "Image / video cue", "defaults": {"url": "", "mediaType": "video", "duration": 20}},
+    {"type": "game-over", "label": "Complete", "defaults": {"message": "Complete"}},
 ]
 
 
@@ -86,7 +58,7 @@ def event_duration(event: dict[str, Any], tempo: int | float | None = None) -> i
         t = tempo or event.get("tempo") or 60
         count = event.get("count") or 4
         return int((60 / max(1, float(t))) * int(count))
-    if typ in {"metronome", "stroke-tempo", "stroke-grip", "stroke-style", "stroke-hand", "clear-chat-message", "reset", "status-effect"}:
+    if typ in {"metronome", "stroke-tempo", "stroke-grip", "stroke-style", "clear-chat-message"}:
         return 1
     if typ == "game-over":
         return 0
@@ -111,8 +83,7 @@ def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
         raise ValueError(f"Unsupported event type: {typ or '<missing>'}")
     out = dict(event)
     out["type"] = typ
-    if "id" not in out:
-        out["id"] = uuid.uuid4().hex[:12]
+    out.setdefault("id", uuid.uuid4().hex[:12])
     if "duration" in out:
         try:
             out["duration"] = max(0, int(float(out["duration"])))
@@ -141,7 +112,6 @@ class FunscriptAction:
 
 
 def events_to_funscript(events: list[dict[str, Any]]) -> dict[str, Any]:
-    """A pragmatic FunScript export: tempo events become oscillating position actions."""
     actions: list[FunscriptAction] = []
     time_ms = 0
     tempo = 60
@@ -170,65 +140,37 @@ def events_to_funscript(events: list[dict[str, Any]]) -> dict[str, Any]:
 
     if not actions:
         actions = [FunscriptAction(at=0, pos=50), FunscriptAction(at=1000, pos=50)]
-    return {
-        "version": "1.0",
-        "inverted": False,
-        "range": 90,
-        "metadata": {"generator": "fapinstructor-docker"},
-        "actions": [a.__dict__ for a in actions],
-    }
+    return {"version": "1.0", "inverted": False, "range": 90, "metadata": {"generator": "fapinstructor-personal"}, "actions": [a.__dict__ for a in actions]}
 
 
 def generate_game_from_config(config: dict[str, Any], instructor: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rng = random.Random(config.get("seed") or random.randrange(1_000_000_000))
-    duration_minutes = float(config.get("durationMinutes") or config.get("duration_minutes") or 8)
+    duration_minutes = float(config.get("durationMinutes") or config.get("duration_minutes") or 5)
     min_tempo = int(config.get("minTempo") or config.get("min_tempo") or 45)
     max_tempo = int(config.get("maxTempo") or config.get("max_tempo") or 120)
     intensity = str(config.get("intensity") or "medium")
-    include_edges = bool(config.get("includeEdges", True))
     include_media = bool(config.get("includeMedia", False))
     include_instructions = bool(config.get("includeInstructions", True))
 
     target = max(60, int(duration_minutes * 60))
-    events: list[dict[str, Any]] = []
-    name = (instructor or {}).get("name", "Instructor")
-    events.append(normalize_event({"type": "chat-message", "text": f"{name}: session starting. Respect your limits and stop when needed.", "speech": "Session starting. Respect your limits and stop when needed.", "duration": 5}))
-    elapsed = compute_duration(events)
+    events: list[dict[str, Any]] = [normalize_event({"type": "chat-message", "text": "Session starting. Follow the metronome and pause if needed.", "speech": "Session starting. Follow the metronome and pause if needed.", "duration": 5})]
     tempo = rng.randint(min_tempo, max_tempo)
     events.append(normalize_event({"type": "metronome", "tempo": tempo, "measure": "4/4"}))
 
+    elapsed = compute_duration(events)
     cycle = 0
     while elapsed < target - 20:
         cycle += 1
         tempo = rng.randint(min_tempo, max_tempo)
-        stroke_duration = rng.randint(12, 35) if intensity != "low" else rng.randint(8, 22)
-        events.append(normalize_event({"type": "stroke", "tempo": tempo, "duration": stroke_duration, "grip": rng.choice(["light", "normal", "firm"]), "style": rng.choice(["full", "short", "tip"])}))
+        duration = rng.randint(12, 35) if intensity != "low" else rng.randint(8, 22)
+        events.append(normalize_event({"type": "stroke", "tempo": tempo, "duration": duration, "grip": rng.choice(["light", "normal", "firm"]), "style": rng.choice(["full", "short"])}))
         if rng.random() < 0.30:
-            rest = rng.randint(5, 15)
-            events.append(normalize_event({"type": "wait", "duration": rest}))
+            events.append(normalize_event({"type": "wait", "duration": rng.randint(5, 15)}))
         if include_instructions and cycle % 3 == 0:
-            events.append(normalize_event({
-                "type": "instruction",
-                "title": "Check-in",
-                "description": "Adjust intensity, hydrate, or pause if you need to.",
-                "duration": 6,
-                "options": [
-                    {"title": "Continue", "events": []},
-                    {"title": "Slow tempo", "events": [{"type": "stroke-tempo", "tempo": max(min_tempo, tempo - 20)}]},
-                ],
-            }))
-        if include_edges and cycle % 4 == 0:
-            events.append(normalize_event({"type": "edge", "duration": rng.randint(10, 20), "cooldown": rng.randint(5, 15)}))
+            events.append(normalize_event({"type": "instruction", "title": "Check in", "description": "Adjust the pace or continue.", "duration": 6, "options": [{"title": "Continue", "events": []}, {"title": "Slow tempo", "events": [{"type": "stroke-tempo", "tempo": max(min_tempo, tempo - 20)}]}]}))
         if include_media and rng.random() < 0.15:
             events.append(normalize_event({"type": "media", "url": config.get("mediaUrl", ""), "mediaType": "video", "duration": 15}))
         elapsed = compute_duration(events)
 
-    outcome = str(config.get("outcome") or rng.choice(["deny", "edge", "finish"])).lower()
-    if outcome == "finish":
-        events.append(normalize_event({"type": "orgasm", "orgasm": {"type": "cum", "edgeDuration": 20, "edgeCountdown": 5}}))
-    elif outcome == "edge":
-        events.append(normalize_event({"type": "orgasm", "orgasm": {"type": "edge", "edgeDuration": 20, "cooldown": 10}}))
-    else:
-        events.append(normalize_event({"type": "orgasm", "orgasm": {"type": "deny", "edgeDuration": 10, "edgeCountdown": 5}}))
     events.append(normalize_event({"type": "game-over", "message": "Complete"}))
     return events

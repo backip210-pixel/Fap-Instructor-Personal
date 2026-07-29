@@ -16,6 +16,6 @@
   <circle cx="255" cy="251" r="14" fill="#ff4fa3" stroke="#fff7fb" stroke-width="8"/>
   <text x="382" y="184" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="74" font-weight="900" letter-spacing="-4" fill="#fff7fb">Fap Instructor</text>
   <text x="386" y="252" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="42" font-weight="800" fill="#ff8cc4">Personal Docker Edition</text>
-  <text x="90" y="438" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="38" font-weight="700" fill="#d9c8df">Scripts • Generator • Player • Metronome • Media • Devices • WebSocket rooms</text>
-  <text x="90" y="500" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" fill="#a896ac">Single-container, SQLite-backed, no payments, no age gate, personal-use.</text>
+  <text x="90" y="438" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="38" font-weight="700" fill="#d9c8df">Images • Videos • Scripts • Player • Metronome</text>
+  <text x="90" y="500" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" fill="#a896ac">Single-container, SQLite-backed, simple personal-use core.</text>
 </svg>
