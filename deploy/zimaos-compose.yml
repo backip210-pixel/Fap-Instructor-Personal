@@ -1,0 +1,21 @@
+services:
+  fapinstructor:
+    image: ghcr.io/backip210-pixel/fap-instructor-personal:latest
+    container_name: fap-instructor-personal
+    ports:
+      - "8080:8080"
+    environment:
+      APP_NAME: "Fap Instructor Personal"
+      PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8080"
+      DATA_DIR: "/data"
+      SEED_DEMO_DATA: "true"
+      ENABLE_REMOTE_INTEGRATIONS: "false"
+      HANDY_API_BASE: "https://www.handyfeeling.com/api/handy/v2"
+      HANDY_SCRIPT_API: "https://scripts01.handyfeeling.com/api/script/v0"
+      LOVENSE_API_TOKEN: ""
+      LOVENSE_BASIC_API: "https://api.lovense-api.com/api/basicApi"
+      AUTOBLOW_LATENCY_URL: "https://latency.autoblowapi.com/autoblow/connected"
+      LANGUAGETOOL_API: ""
+    volumes:
+      - /DATA/AppData/fapinstructor-personal:/data
+    restart: unless-stopped

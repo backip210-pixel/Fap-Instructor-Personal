@@ -7,12 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-# Configure before importing the app.
-os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="fi-personal-test-")
+os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="fi-personal-simple-test-")
 os.environ["SEED_DEMO_DATA"] = "true"
-os.environ["SEED_ADMIN_EMAIL"] = "admin@example.com"
-os.environ["SEED_ADMIN_PASSWORD"] = "admin123!"
-os.environ["ALLOW_REGISTRATION"] = "true"
 os.environ["ENABLE_REMOTE_INTEGRATIONS"] = "false"
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -27,22 +23,16 @@ def assert_ok(response, expected_status=200):
 
 def main() -> None:
     with TestClient(app) as client:
-        assert_ok(client.get("/api/health"))
+        health = assert_ok(client.get("/api/health")).json()
+        assert health["mode"] == "simple-no-login"
+
         config = assert_ok(client.get("/api/config")).json()
         assert "eventCatalog" in config
         assert "payments" not in config
 
-        me = client.get("/api/auth/me")
-        assert me.status_code == 401
-
-        login = assert_ok(
-            client.post(
-                "/api/auth/login",
-                json={"email": "admin@example.com", "password": "admin123!"},
-            )
-        ).json()
-        assert login["user"]["role"] == "admin"
-        assert "subscriptionStatus" not in login["user"]
+        # No login or subscription layer in the simplified build.
+        assert client.get("/api/auth/me").status_code == 404
+        assert client.get("/api/subscription").status_code == 404
 
         scripts = assert_ok(client.get("/api/scripts?limit=5")).json()["items"]
         assert scripts, "seeded scripts should exist"
@@ -57,7 +47,6 @@ def main() -> None:
                 json={
                     "title": "Smoke script",
                     "description": "Created by smoke test",
-                    "visibility": "private",
                     "tags": ["smoke"],
                     "events": [
                         {"type": "chat-message", "text": "Test", "duration": 1},
@@ -69,6 +58,14 @@ def main() -> None:
             )
         ).json()["item"]
         assert created["durationSeconds"] >= 3
+
+        updated = assert_ok(
+            client.put(
+                f"/api/scripts/{created['id']}",
+                json={**created, "title": "Smoke script updated"},
+            )
+        ).json()["item"]
+        assert updated["title"] == "Smoke script updated"
 
         generators = assert_ok(client.get("/api/game-generators")).json()["items"]
         assert generators, "seeded generator should exist"
@@ -83,15 +80,11 @@ def main() -> None:
         cmd = assert_ok(client.post(f"/api/devices/{device['id']}/command", json={"command": {"action": "tempo", "tempo": 88}})).json()
         assert cmd["status"] == "sent"
 
-        room = assert_ok(client.post("/api/challenger/rooms", json={"title": "Smoke room"})).json()["item"]
-        assert room["code"]
-        assert_ok(client.get(f"/api/challenger/rooms/{room['code']}"))
-
-        admin = assert_ok(client.get("/api/admin/stats")).json()
-        assert "payments" not in admin["counts"]
+        media = assert_ok(client.post("/api/media", json={"title": "Example", "mediaType": "video", "url": "https://example.com/video.mp4"})).json()["item"]
+        assert media["url"].startswith("https://")
 
         assert_ok(client.get("/"))
-        assert client.get("/api/subscription").status_code == 404
+        assert_ok(client.get("/static/logo.svg"))
 
     print("Smoke test passed")
 

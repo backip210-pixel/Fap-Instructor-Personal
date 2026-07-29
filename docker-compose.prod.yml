@@ -1,7 +1,7 @@
 services:
   fapinstructor:
-    image: ${IMAGE:-ghcr.io/your-github-user/fapinstructor-personal:latest}
-    container_name: fapinstructor-personal
+    image: ${IMAGE:-ghcr.io/backip210-pixel/fap-instructor-personal:latest}
+    container_name: fap-instructor-personal
     ports:
       - "${PORT:-8080}:8080"
     env_file:
