@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Fap Instructor Personal wordmark</title>
+  <desc id="desc">Logo icon with the app name Fap Instructor Personal.</desc>
+  <defs>
+    <linearGradient id="bg" x1="22" y1="18" x2="250" y2="282" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff4fa3"/>
+      <stop offset="0.52" stop-color="#b84cff"/>
+      <stop offset="1" stop-color="#3524ff"/>
+    </linearGradient>
+    <linearGradient id="text" x1="320" y1="70" x2="1000" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff7fb"/>
+      <stop offset="1" stop-color="#e7c7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="42" fill="#100d12"/>
+  <rect x="36" y="36" width="248" height="248" rx="72" fill="url(#bg)"/>
+  <path d="M102 204 132 88c4-14 15-22 29-22s25 8 29 22l30 116c4 16-8 31-24 31h-70c-16 0-28-15-24-31Z" fill="#fff7fb" opacity="0.92"/>
+  <path d="M160 92v106" stroke="#2a1836" stroke-width="9" stroke-linecap="round" opacity="0.72"/>
+  <path d="M160 96 198 188" stroke="#ff4fa3" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="198" cy="188" r="13" fill="#ff4fa3" stroke="#fff7fb" stroke-width="7"/>
+  <text x="319" y="145" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="76" font-weight="900" letter-spacing="-4" fill="url(#text)">Fap Instructor</text>
+  <text x="323" y="215" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="42" font-weight="700" fill="#ff8cc4">Personal Docker Edition</text>
+  <path d="M322 246h500" stroke="#ff4fa3" stroke-width="6" stroke-linecap="round" opacity="0.45"/>
+</svg>

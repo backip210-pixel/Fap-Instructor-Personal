@@ -1,0 +1,14 @@
+services:
+  fapinstructor:
+    build: .
+    container_name: fapinstructor-single
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - fapinstructor-data:/data
+    restart: unless-stopped
+
+volumes:
+  fapinstructor-data:

@@ -1,0 +1,14 @@
+services:
+  fapinstructor:
+    image: ${IMAGE:-ghcr.io/your-github-user/fapinstructor-personal:latest}
+    container_name: fapinstructor-personal
+    ports:
+      - "${PORT:-8080}:8080"
+    env_file:
+      - .env
+    volumes:
+      - fapinstructor-data:/data
+    restart: unless-stopped
+
+volumes:
+  fapinstructor-data:

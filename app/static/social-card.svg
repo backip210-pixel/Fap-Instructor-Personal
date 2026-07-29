@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Fap Instructor Personal social preview</title>
+  <desc id="desc">A social card for the personal Docker app.</desc>
+  <defs>
+    <radialGradient id="r1" cx="18%" cy="8%" r="80%"><stop offset="0" stop-color="#ff4fa3" stop-opacity="0.42"/><stop offset="1" stop-color="#100d12" stop-opacity="0"/></radialGradient>
+    <radialGradient id="r2" cx="92%" cy="90%" r="70%"><stop offset="0" stop-color="#b84cff" stop-opacity="0.36"/><stop offset="1" stop-color="#100d12" stop-opacity="0"/></radialGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4fa3"/><stop offset=".52" stop-color="#b84cff"/><stop offset="1" stop-color="#3524ff"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#100d12"/>
+  <rect width="1200" height="630" fill="url(#r1)"/>
+  <rect width="1200" height="630" fill="url(#r2)"/>
+  <rect x="86" y="92" width="244" height="244" rx="72" fill="url(#bg)"/>
+  <path d="M149 264 180 143c4-16 17-26 33-26s29 10 33 26l31 121c5 19-10 37-29 37h-70c-19 0-34-18-29-37Z" fill="#fff7fb" opacity="0.94"/>
+  <path d="M213 151v112" stroke="#2a1836" stroke-width="10" stroke-linecap="round" opacity="0.72"/>
+  <path d="M213 154 255 251" stroke="#ff4fa3" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="255" cy="251" r="14" fill="#ff4fa3" stroke="#fff7fb" stroke-width="8"/>
+  <text x="382" y="184" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="74" font-weight="900" letter-spacing="-4" fill="#fff7fb">Fap Instructor</text>
+  <text x="386" y="252" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="42" font-weight="800" fill="#ff8cc4">Personal Docker Edition</text>
+  <text x="90" y="438" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="38" font-weight="700" fill="#d9c8df">Scripts • Generator • Player • Metronome • Media • Devices • WebSocket rooms</text>
+  <text x="90" y="500" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" fill="#a896ac">Single-container, SQLite-backed, no payments, no age gate, personal-use.</text>
+</svg>
