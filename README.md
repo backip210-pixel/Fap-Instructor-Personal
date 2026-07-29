@@ -30,7 +30,7 @@ ghcr.io/backip210-pixel/fap-instructor-personal:latest
 
 ## ZimaOS compose
 
-Use this in a ZimaOS custom Docker Compose app. It uses host port `8090` to avoid common `8080` conflicts and a Docker named volume to avoid host-folder permission issues.
+If ZimaOS gives `invalid mount config for type "bind": field Source must not be empty`, use this **no-volume** compose first and delete any Storage/Mount rows in the ZimaOS UI.
 
 ```yaml
 services:
@@ -42,14 +42,9 @@ services:
     environment:
       APP_NAME: "Fap Instructor Personal"
       PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8090"
-      DATA_DIR: "/data"
+      DATA_DIR: "/tmp/fapinstructor-data"
       SEED_DEMO_DATA: "true"
-    volumes:
-      - fapinstructor-data:/data
     restart: unless-stopped
-
-volumes:
-  fapinstructor-data:
 ```
 
 Open:
@@ -58,7 +53,7 @@ Open:
 http://YOUR-ZIMAOS-IP:8090
 ```
 
-No login is required.
+No login is required. This no-volume version may not persist data after container recreation, but it avoids ZimaOS mount errors. Add persistence later only after the app starts.
 
 ## Run locally
 

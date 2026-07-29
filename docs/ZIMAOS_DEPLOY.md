@@ -1,6 +1,14 @@
 # ZimaOS deployment
 
-This is the stripped-down core build:
+If ZimaOS shows this error:
+
+```text
+invalid mount config for type "bind": field Source must not be empty
+```
+
+it means ZimaOS is creating a storage/bind-mount row with a blank host/source path. The fix is to deploy **without any volumes/mounts** first.
+
+This build is intentionally simple:
 
 - no login
 - no admin
@@ -9,17 +17,15 @@ This is the stripped-down core build:
 - no toy/device integrations
 - no external services
 
-It only serves scripts, media upload/URL storage, a script player, and a metronome.
-
 ## Image
 
 ```text
 ghcr.io/backip210-pixel/fap-instructor-personal:latest
 ```
 
-## Recommended ZimaOS compose
+## Use this exact ZimaOS compose first
 
-This uses host port `8090` to avoid `8080` conflicts and a Docker named volume to avoid host directory permission issues.
+Important: this compose has **no `volumes:` section**.
 
 ```yaml
 services:
@@ -31,14 +37,9 @@ services:
     environment:
       APP_NAME: "Fap Instructor Personal"
       PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8090"
-      DATA_DIR: "/data"
+      DATA_DIR: "/tmp/fapinstructor-data"
       SEED_DEMO_DATA: "true"
-    volumes:
-      - fapinstructor-data:/data
     restart: unless-stopped
-
-volumes:
-  fapinstructor-data:
 ```
 
 Replace:
@@ -52,6 +53,36 @@ Open:
 ```text
 http://YOUR-ZIMAOS-IP:8090
 ```
+
+## Critical ZimaOS UI step
+
+In the ZimaOS app/custom-compose screen, look for sections called any of these:
+
+- Storage
+- Volumes
+- Mounts
+- Path mappings
+- Directories
+
+Delete every row there for now.
+
+Do **not** leave a blank storage row. A blank row causes:
+
+```text
+field Source must not be empty
+```
+
+## Why DATA_DIR uses /tmp here
+
+The compose above uses:
+
+```yaml
+DATA_DIR: "/tmp/fapinstructor-data"
+```
+
+That avoids needing `/data` or any mounted path while we confirm the app starts.
+
+This means data may not persist if the container is recreated. Once the app is confirmed running, we can add persistence back with a valid ZimaOS path.
 
 ## If the image will not pull
 
@@ -79,18 +110,33 @@ docker ps -a | grep fap-instructor
 docker logs --tail=200 fap-instructor-personal
 ```
 
-Common fixes:
-
-- Use host port `8090` instead of `8080`
-- Use the named volume compose above instead of a host path
-- Make the GHCR image public or log into GHCR
-
-## Reset data
+Also remove old containers before trying again:
 
 ```bash
-docker stop fap-instructor-personal
-docker rm fap-instructor-personal
-docker volume rm fapinstructor-data
+docker stop fap-instructor-personal || true
+docker rm fap-instructor-personal || true
 ```
 
-Then redeploy.
+## Add persistence later only after it runs
+
+Once the no-volume version works, we can add persistence with a real host path. For example:
+
+```bash
+mkdir -p /DATA/AppData/fapinstructor-personal
+chmod 777 /DATA/AppData/fapinstructor-personal
+```
+
+Then use:
+
+```yaml
+volumes:
+  - /DATA/AppData/fapinstructor-personal:/data
+```
+
+and change:
+
+```yaml
+DATA_DIR: "/data"
+```
+
+But do not add this until the no-volume version works.

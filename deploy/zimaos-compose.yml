@@ -7,11 +7,6 @@ services:
     environment:
       APP_NAME: "Fap Instructor Personal"
       PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8090"
-      DATA_DIR: "/data"
+      DATA_DIR: "/tmp/fapinstructor-data"
       SEED_DEMO_DATA: "true"
-    volumes:
-      - fapinstructor-data:/data
     restart: unless-stopped
-
-volumes:
-  fapinstructor-data:
