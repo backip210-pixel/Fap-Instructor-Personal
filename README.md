@@ -4,24 +4,61 @@
 
 # Fap Instructor Personal
 
-A stripped-down personal Docker app for the core functionality only:
+A very small personal Docker app for the core functionality only:
 
-- scripts
-- script builder
-- player
-- metronome
-- procedural generators
-- generated games
-- media library
-- simple device hooks
+- Add/upload images and videos
+- Add remote image/video/audio/embed URLs
+- Build simple timed scripts
+- Play scripts with countdowns and a metronome
+- Use a standalone metronome
+- Generate simple timed metronome sessions
 
-No login. No admin. No age gate. No payments. No subscriptions. No Patreon. No WebSocket rooms. Just the local app.
+Removed on purpose:
+
+- Login/auth/admin
+- Age gate
+- Payments/subscriptions/Patreon
+- Toy/device integrations
+- WebSocket/challenger features
+- External service dependencies
 
 ## Docker image
 
 ```text
 ghcr.io/backip210-pixel/fap-instructor-personal:latest
 ```
+
+## ZimaOS compose
+
+Use this in a ZimaOS custom Docker Compose app. It uses host port `8090` to avoid common `8080` conflicts and a Docker named volume to avoid host-folder permission issues.
+
+```yaml
+services:
+  fapinstructor:
+    image: ghcr.io/backip210-pixel/fap-instructor-personal:latest
+    container_name: fap-instructor-personal
+    ports:
+      - "8090:8080"
+    environment:
+      APP_NAME: "Fap Instructor Personal"
+      PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8090"
+      DATA_DIR: "/data"
+      SEED_DEMO_DATA: "true"
+    volumes:
+      - fapinstructor-data:/data
+    restart: unless-stopped
+
+volumes:
+  fapinstructor-data:
+```
+
+Open:
+
+```text
+http://YOUR-ZIMAOS-IP:8090
+```
+
+No login is required.
 
 ## Run locally
 
@@ -36,74 +73,16 @@ Open:
 http://localhost:8080
 ```
 
-## ZimaOS compose
-
-Use this in a ZimaOS custom Docker Compose app. Change `YOUR-ZIMAOS-IP` if you want the base URL to match your server.
-
-```yaml
-services:
-  fapinstructor:
-    image: ghcr.io/backip210-pixel/fap-instructor-personal:latest
-    container_name: fap-instructor-personal
-    ports:
-      - "8080:8080"
-    environment:
-      APP_NAME: "Fap Instructor Personal"
-      PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8080"
-      DATA_DIR: "/data"
-      SEED_DEMO_DATA: "true"
-      ENABLE_REMOTE_INTEGRATIONS: "false"
-    volumes:
-      - /DATA/AppData/fapinstructor-personal:/data
-    restart: unless-stopped
-```
-
-Then open:
-
-```text
-http://YOUR-ZIMAOS-IP:8080
-```
-
-## If 8080 is busy
-
-Use another host port, for example:
-
-```yaml
-ports:
-  - "8090:8080"
-environment:
-  PUBLIC_BASE_URL: "http://YOUR-ZIMAOS-IP:8090"
-```
-
-Then open:
-
-```text
-http://YOUR-ZIMAOS-IP:8090
-```
-
 ## Data
 
-Data is stored in the mounted volume/path:
+Data lives in the `/data` volume:
 
 ```text
 /data/app.db
 /data/uploads/
 ```
 
-For ZimaOS, the recommended host path is:
-
-```text
-/DATA/AppData/fapinstructor-personal
-```
-
-## Updating on ZimaOS/SSH
-
-```bash
-docker pull ghcr.io/backip210-pixel/fap-instructor-personal:latest
-docker compose up -d
-```
-
-## Development tests
+## Tests
 
 ```bash
 pip install -r requirements-dev.txt
@@ -112,18 +91,16 @@ node --check app/static/app.js
 python tests/smoke_test.py
 ```
 
-## Included API
+## API
 
 - `GET /api/health`
 - `GET/POST /api/scripts`
 - `GET/PUT/DELETE /api/scripts/{id}`
 - `GET /api/scripts/{id}/export/funscript`
-- `GET/POST /api/game-generators`
+- `GET /api/media`
+- `POST /api/media`
+- `POST /api/media/upload`
+- `GET /api/game-generators`
 - `POST /api/game-generators/{id}/start`
 - `GET /api/games`
 - `GET /api/games/{id}`
-- `GET/POST /api/media`
-- `POST /api/media/upload`
-- `GET/POST /api/devices`
-- `POST /api/devices/{id}/test`
-- `POST /api/devices/{id}/command`

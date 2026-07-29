@@ -53,20 +53,6 @@ def db() -> Iterable[sqlite3.Connection]:
         conn.close()
 
 
-def row_to_dict(row: sqlite3.Row | None, json_fields: set[str] | None = None) -> dict[str, Any] | None:
-    if row is None:
-        return None
-    out = dict(row)
-    for field in json_fields or set():
-        if field in out:
-            out[field] = loads(out[field], [] if field.endswith("s") or field.endswith("json") else {})
-    return out
-
-
-def rows_to_dicts(rows: Iterable[sqlite3.Row], json_fields: set[str] | None = None) -> list[dict[str, Any]]:
-    return [row_to_dict(row, json_fields) or {} for row in rows]
-
-
 def _ensure_column(conn: sqlite3.Connection, table: str, column: str, definition: str) -> None:
     cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
     if column not in cols:
@@ -130,36 +116,13 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
-            CREATE TABLE IF NOT EXISTS devices (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL DEFAULT 1,
-                device_type TEXT NOT NULL,
-                label TEXT NOT NULL,
-                config_json TEXT NOT NULL DEFAULT '{}',
-                status TEXT NOT NULL DEFAULT 'unknown',
-                last_seen_at TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS device_command_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                device_id INTEGER,
-                user_id INTEGER NOT NULL DEFAULT 1,
-                command_json TEXT NOT NULL,
-                response_json TEXT NOT NULL DEFAULT '{}',
-                status TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            );
-
             CREATE INDEX IF NOT EXISTS idx_scripts_updated ON scripts(updated_at);
             CREATE INDEX IF NOT EXISTS idx_games_updated ON games(updated_at);
             CREATE INDEX IF NOT EXISTS idx_media_updated ON media(updated_at);
-            CREATE INDEX IF NOT EXISTS idx_devices_updated ON devices(updated_at);
             """
         )
 
-        # Compatibility with older local volumes from previous builds. Extra columns are harmless.
+        # Compatibility with older local volumes from previous builds.
         for column, definition in {
             "tags_json": "TEXT NOT NULL DEFAULT '[]'",
             "events_json": "TEXT NOT NULL DEFAULT '[]'",

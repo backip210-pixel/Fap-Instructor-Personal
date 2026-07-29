@@ -32,7 +32,6 @@ SAFE_EVENT_TYPES = {
     "eyes",
     "audio",
     "media",
-    "device",
     "status-effect",
     "interact",
     "reset",
@@ -61,7 +60,6 @@ EVENT_CATALOG = [
     {"type": "edge", "label": "Edge marker", "defaults": {"duration": 15, "cooldown": 10}},
     {"type": "orgasm", "label": "Orgasm outcome", "defaults": {"orgasm": {"type": "deny", "edgeDuration": 15, "edgeCountdown": 5}}},
     {"type": "media", "label": "Remote media cue", "defaults": {"url": "", "mediaType": "video", "duration": 20}},
-    {"type": "device", "label": "Device command", "defaults": {"command": {"action": "tempo", "tempo": 70}, "duration": 10}},
     {"type": "game-over", "label": "Game over", "defaults": {"message": "Complete"}},
 ]
 
@@ -167,8 +165,6 @@ def events_to_funscript(events: list[dict[str, Any]]) -> dict[str, Any]:
         if typ == "stroke":
             tempo = int(event.get("tempo") or tempo)
             add_segment(event_duration(event, tempo), tempo)
-        elif typ == "device" and event.get("command", {}).get("tempo"):
-            add_segment(event_duration(event, tempo), int(event["command"]["tempo"]))
         else:
             time_ms += event_duration(event, tempo) * 1000
 

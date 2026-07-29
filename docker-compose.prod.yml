@@ -3,7 +3,7 @@ services:
     image: ${IMAGE:-ghcr.io/backip210-pixel/fap-instructor-personal:latest}
     container_name: fap-instructor-personal
     ports:
-      - "${PORT:-8080}:8080"
+      - "${PORT:-8090}:8080"
     env_file:
       - .env
     volumes:
