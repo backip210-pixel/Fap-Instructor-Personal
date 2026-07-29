@@ -43,19 +43,35 @@ function shell(title, subtitle, body) {
   state.player?.destroy?.(); state.player = null;
   state.metronome?.destroy?.(); state.metronome = null;
   const path = currentPath();
+  const navHtml = navItems.map(([href, icon, label]) => `<a href="#${href}" class="${path === href || path.startsWith(href + '/') ? 'active' : ''}"><span>${icon}</span> ${escapeHtml(label)}</a>`).join('');
   appEl.innerHTML = `
-    <div class="shell">
-      <aside class="sidebar">
-        <div class="brand"><div class="logo-mark"><img src="/static/logo.svg" alt="FI logo"></div><div><strong>${escapeHtml(state.config?.appName || 'Fap Instructor')}</strong><div class="muted tiny">Simple local Docker app</div></div></div>
-        <nav class="nav">${navItems.map(([href, icon, label]) => `<a href="#${href}" class="${path === href || path.startsWith(href + '/') ? 'active' : ''}"><span>${icon}</span> ${escapeHtml(label)}</a>`).join('')}</nav>
+    <div class="app">
+      <header class="top-nav">
+        <button class="icon-btn" id="drawer-open" aria-label="Open navigation"><span class="hamburger-lines"></span></button>
+        <a class="logo-circle" href="#home" aria-label="Home"><img src="/static/logo.svg" alt="FI logo"></a>
+        <a class="top-link" href="#generators">Local Build</a>
+        <a class="icon-btn signal-icon" href="#metronome" aria-label="Metronome">◉</a>
+        <a class="avatar" href="#media" aria-label="Media">●</a>
+      </header>
+      <div class="drawer-backdrop" id="drawer-backdrop"></div>
+      <aside class="drawer" id="drawer">
+        <div class="drawer-brand"><div class="logo-circle"><img src="/static/logo.svg" alt="FI logo"></div><div><strong>${escapeHtml(state.config?.appName || 'Fap Instructor')}</strong><div class="muted tiny">Simple local Docker app</div></div></div>
+        <nav class="nav-list">${navHtml}</nav>
         <hr><div class="card small muted">No login, no toy integrations, no subscriptions. Just local scripts, media, and metronome playback.</div>
       </aside>
-      <main class="main">
-        <div class="topbar"><div class="page-title"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle || '')}</p></div><div class="row"><a class="btn small-btn" href="#builder/new">New script</a><a class="btn primary small-btn" href="#media">Add media</a></div></div>
-        <div id="page">${body}</div>
+      <main class="content">
+        <div class="page-title"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle || '')}</p></div>
+        ${body}
       </main>
     </div>`;
+  const drawer = $('#drawer');
+  const backdrop = $('#drawer-backdrop');
+  const closeDrawer = () => { drawer.classList.remove('open'); backdrop.classList.remove('open'); };
+  $('#drawer-open').addEventListener('click', () => { drawer.classList.add('open'); backdrop.classList.add('open'); });
+  backdrop.addEventListener('click', closeDrawer);
+  $$('.nav-list a').forEach(a => a.addEventListener('click', closeDrawer));
 }
+
 
 async function init() {
   state.config = await api('/api/config').catch(() => ({ appName: 'Fap Instructor Personal', eventCatalog: [] }));
